@@ -3,7 +3,9 @@
 
 import pandas as pd
 import csv
+import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 print(matplotlib.get_backend())
 matplotlib.use('Agg')
 print(matplotlib.get_backend())
@@ -29,6 +31,7 @@ both the high and low ends, but the majority of cars are grouped fairly
 tightly around the averages. It would be interesting to see histograms of each
 distribution for more detail, so that's what we'll do."""
 
+#How many makes do we have?
 
 """ Before histograms, I'm curious as to what car has 16 cylinders"""
 
@@ -41,7 +44,33 @@ surprised to see this car show up as an outlier later on in this analysis"""
 
 
 """Histograms"""
-data.hist()
+histogram = data.hist()
+plt.savefig('BasicHistogram')
+
+""" "Year" histogram is distorted by the bin sizes, as is "CYLINDERS" """
+histogram = data.hist(column="YEAR", bins=15)
+plt.savefig('YearsHistogram')
+histogram = data.hist(column="CYLINDERS", bins=16)
+plt.savefig('CylindersHistogram')
+
+"""Cylinders still looks a little strange so I will look at the actual numbers"""
+print(data.groupby("CYLINDERS").count())
+
+""" There are 16 models with 2 cylinders, 28 with 3, 481 with 5, a few with 10,
+12, and 6, but most have either 4, 6, or 8. Turns out there was nothing wrong
+with the histogram, I just  didn't know you could have cars with odd numbers of
+cylinders. Does having an odd number of cylinders have a disproportionate effect
+ on fuel consumption? May be a question for later."""
+
+#print(data.loc[data["CYLINDERS"] == 5].groupby("MAKE").count()["MODEL"])
+#print data.loc[data['CYLINDERS'] == 5]
+
+# print (data.groupby(["CYLINDERS", "MAKE"]).count())
+table = pd.pivot_table(data, index = ["MAKE"], columns = "CYLINDERS", aggfunc = len)
+print(table)
+"""     """
+
+
 ############# Note: This is not working with Linux Subsystem for Windows.
 # Implement fix noted here:https://www.reddit.com/r/Python/comments/595j6v/matplotlib_in_the_new_linux_subsystem_of_windows/
 # Failing that, switch over to windows and resolve dependency issues.
