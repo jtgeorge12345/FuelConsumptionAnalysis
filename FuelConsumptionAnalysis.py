@@ -6,6 +6,8 @@ import csv
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
+import sklearn
+import sklearn.linear_model
 
 pd.set_option("display.max_columns", 13)
 
@@ -72,13 +74,13 @@ def makeHistograms(data):
 
 """A low-effort way of seeing correlations and seeing kde's equivalent to the
 above histograms would be to make a scatter matrix: """
-def makeScatterMatrix(data):
+def makeScatterMatrix(data, name=""):
     scatter_matrix = pd.plotting.scatter_matrix(data, diagonal='kde')
     for ax in scatter_matrix.ravel():
         ax.set_xlabel(ax.get_xlabel(), fontsize = 5, rotation = 90)
         ax.set_ylabel(ax.get_ylabel(), fontsize = 5, rotation = 0)
-    plt.savefig("scatter_matrix")
-    print("Scatter Matrix Saved")
+    plt.savefig("scatter_matrix"+name)
+    print("Scatter Matrix Saved" + name)
 #makeScatterMatrix(data)
 
 """ From this we can see that there are some pretty obvious correlations
@@ -87,9 +89,6 @@ don't appear to correlate with anything in particular in this view, but it will
 be interesting to see if a closer look will reveal correlations. My expectation
 is that in general, CO2 emissions should fall over time when we look more
 specifically at certain models"""
-
-
-
 
 #print(data.loc[data["CYLINDERS"] == 5].groupby("MAKE").count()["MODEL"])
 #print data.loc[data['CYLINDERS'] == 5]
@@ -102,10 +101,24 @@ cylinders. Does having an odd number of cylinders have a disproportionate effect
  on fuel consumption? May be a question for later. Here's a look at cylindar
  count by make:"""
 
-table = pd.pivot_table(data, index = ["MAKE"], columns = "CYLINDERS", aggfunc = len)
-#print(table)
-"""     """
+# print(data['CYLINDERS'].value_counts())
 
+""" Linear Regression"""
+
+reducedData = data[["TRANSMISSION", "FUEL", "CYLINDERS", "ENGINE SIZE", "COMB (mpg)", "CO2 EMISSIONS"]]
+
+#print(reducedData.head())
+#print(data["TRANSMISSION"].value_counts())
+
+#These statements produce warnings, however the columns are coded as intended
+#so the warnings can be ignored.
+reducedData["TRANSMISSION"], trans_map = reducedData["TRANSMISSION"].factorize()
+reducedData["FUEL"], fuel_map = reducedData["FUEL"].factorize()
+
+#makeScatterMatrix(reducedData, "_Reduced")
+
+regressionModel = sklearn.linear_model.LinearRegression()
+print(regressionModel)
 #Put data into a Pandas Dataframe
 
 #Use learning techniques to predict fuel consumption based on other attributes
