@@ -119,6 +119,30 @@ reducedData["FUEL"], fuel_map = reducedData["FUEL"].factorize()
 
 regressionModel = sklearn.linear_model.LinearRegression()
 print(regressionModel)
+response = reducedData.pop("CO2 EMISSIONS")
+
+regressionModel.fit(reducedData[:10000], response[:10000])
+
+print("coefficients:", regressionModel.coef_)
+print("intercepts:", regressionModel.intercept_)
+
+score = regressionModel.score(reducedData[10000:], response[10000:])
+
+print("score:", score)
+
+
+predictions = regressionModel.predict(reducedData[10000:10010])
+
+"""Checking a few of the results. They don't look too far off. However, athough
+I tried to eliminate obviously correlated variables, it's hard to ensure there's
+no multicolinearity problem without examining variance inflation factors, which
+sckit does not easily support at this time. Also, though my R squared value came
+out to .836, it would be better to look at R squared-adusted. There are also
+problems with how the categorical variables are coded, which I will not get into here
+"""
+for i in range(len(predictions)):
+    print("predicted:", predictions[i], "Actual:", response[10000 + i] )
+
 #Put data into a Pandas Dataframe
 
 #Use learning techniques to predict fuel consumption based on other attributes
