@@ -104,44 +104,88 @@ cylinders. Does having an odd number of cylinders have a disproportionate effect
 # print(data['CYLINDERS'].value_counts())
 
 """ Linear Regression"""
+def linReg(data):
+    #Todo: Need to re-do this with categorical variables encoded correctly
+    reducedData = data[["TRANSMISSION", "FUEL", "CYLINDERS", "ENGINE SIZE", "COMB (mpg)", "CO2 EMISSIONS"]]
 
-reducedData = data[["TRANSMISSION", "FUEL", "CYLINDERS", "ENGINE SIZE", "COMB (mpg)", "CO2 EMISSIONS"]]
+    #print(reducedData.head())
+    #print(data["TRANSMISSION"].value_counts())
 
-#print(reducedData.head())
-#print(data["TRANSMISSION"].value_counts())
+    #These statements produce warnings, however the columns are coded as intended
+    #so the warnings can be ignored.
+    reducedData["TRANSMISSION"], trans_map = reducedData["TRANSMISSION"].factorize()
+    reducedData["FUEL"], fuel_map = reducedData["FUEL"].factorize()
 
-#These statements produce warnings, however the columns are coded as intended
-#so the warnings can be ignored.
-reducedData["TRANSMISSION"], trans_map = reducedData["TRANSMISSION"].factorize()
-reducedData["FUEL"], fuel_map = reducedData["FUEL"].factorize()
+    #makeScatterMatrix(reducedData, "_Reduced")
 
-#makeScatterMatrix(reducedData, "_Reduced")
+    regressionModel = sklearn.linear_model.LinearRegression()
+    print(regressionModel)
+    response = reducedData.pop("CO2 EMISSIONS")
 
-regressionModel = sklearn.linear_model.LinearRegression()
-print(regressionModel)
-response = reducedData.pop("CO2 EMISSIONS")
+    regressionModel.fit(reducedData[:10000], response[:10000])
 
-regressionModel.fit(reducedData[:10000], response[:10000])
+    print("coefficients:", regressionModel.coef_)
+    print("intercepts:", regressionModel.intercept_)
 
-print("coefficients:", regressionModel.coef_)
-print("intercepts:", regressionModel.intercept_)
+    score = regressionModel.score(reducedData[10000:], response[10000:])
 
-score = regressionModel.score(reducedData[10000:], response[10000:])
-
-print("score:", score)
+    print("score:", score)
 
 
-predictions = regressionModel.predict(reducedData[10000:10010])
+    predictions = regressionModel.predict(reducedData[10000:10010])
 
-"""Checking a few of the results. They don't look too far off. However, athough
-I tried to eliminate obviously correlated variables, it's hard to ensure there's
-no multicolinearity problem without examining variance inflation factors, which
-sckit does not easily support at this time. Also, though my R squared value came
-out to .836, it would be better to look at R squared-adusted. There are also
-problems with how the categorical variables are coded, which I will not get into here
-"""
-for i in range(len(predictions)):
-    print("predicted:", predictions[i], "Actual:", response[10000 + i] )
+    """Checking a few of the results. They don't look too far off. However, athough
+    I tried to eliminate obviously correlated variables, it's hard to ensure there's
+    no multicolinearity problem without examining variance inflation factors, which
+    sckit does not easily support at this time. Also, though my R squared value came
+    out to .836, it would be better to look at R squared-adusted. There are also
+    problems with how the categorical variables are coded, which I will not get into here
+    """
+
+    """ Need to resove the issues with how variables are coded. The numbers assigned
+    are being fed into the linear regression as being sequential, which is not relevant.
+    There should be additional columns, 1 for each variable."""
+
+    for i in range(len(predictions)):
+        print("predicted:", predictions[i], "Actual:", response[10000 + i] )
+
+print(data.head())
+
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import cross_val_score
+
+cats = data.select_dtypes("category")
+
+enc = OneHotEncoder(handle_unknown="ignore", categories="auto")
+enc.fit(cats)
+
+transformed = enc.transform(cats)
+
+print(transformed[5].toarray())
+print(enc.inverse_transform(transformed[5]))
+
+print(data.head())
+prepped_data = pd.get_dummies(data.drop(columns=["MAKE","MODEL", "VEHICLE CLASS"]))
+response = data["VEHICLE CLASS"]
+
+print (response.head())
+
+def knnScorer(est, x, y):
+    if (est.fit(x) == y):
+        return 1
+    return 0
+
+knn = sklearn.neighbors.KNeighborsClassifier(n_neighbors=2, algorithm="auto")
+
+scores = cross_val_score(knn, prepped_data, response, cv=5)
+
+for item in scores:
+    print(item)
+
+
+
+
 
 #Put data into a Pandas Dataframe
 
