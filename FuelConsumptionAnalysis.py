@@ -153,7 +153,8 @@ print(data.head())
 
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.metrics import confusion_matrix
 
 cats = data.select_dtypes("category")
 
@@ -178,10 +179,13 @@ def knnScorer(est, x, y):
 
 knn = sklearn.neighbors.KNeighborsClassifier(n_neighbors=2, algorithm="auto")
 
-scores = cross_val_score(knn, prepped_data, response, cv=5)
+result = cross_val_predict(knn, prepped_data, response, cv=5)
+cm = confusion_matrix(response, result)
 
-for item in scores:
-    print(item)
+print(response.value_counts())
+for line in cm:
+    print(list(line))
+
 
 
 
