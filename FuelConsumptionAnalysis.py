@@ -10,9 +10,19 @@ import sklearn
 import sklearn.linear_model
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.model_selection import cross_val_score, cross_val_predict, cross_validate
 from sklearn.metrics import confusion_matrix
 from sklearn_util import *
+from sklearn.neural_network import MLPClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.gaussian_process import GaussianProcessClassifier
+from sklearn.gaussian_process.kernels import RBF
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+from sklearn.naive_bayes import GaussianNB
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.model_selection import train_test_split
 
 
 pd.set_option("display.max_columns", 13)
@@ -106,53 +116,6 @@ cylinders. Does having an odd number of cylinders have a disproportionate effect
  count by make:"""
 
 
-""" Linear Regression"""
-def linReg(data):
-    #Todo: Need to re-do this with categorical variables encoded correctly
-    reducedData = data[["TRANSMISSION", "FUEL", "CYLINDERS", "ENGINE SIZE", "COMB (mpg)", "CO2 EMISSIONS"]]
-
-    #print(reducedData.head())
-    #print(data["TRANSMISSION"].value_counts())
-
-    #These statements produce warnings, however the columns are coded as intended
-    #so the warnings can be ignored.
-    reducedData["TRANSMISSION"], trans_map = reducedData["TRANSMISSION"].factorize()
-    reducedData["FUEL"], fuel_map = reducedData["FUEL"].factorize()
-
-    #makeScatterMatrix(reducedData, "_Reduced")
-
-    regressionModel = sklearn.linear_model.LinearRegression()
-    print(regressionModel)
-    response = reducedData.pop("CO2 EMISSIONS")
-
-    regressionModel.fit(reducedData[:10000], response[:10000])
-
-    print("coefficients:", regressionModel.coef_)
-    print("intercepts:", regressionModel.intercept_)
-
-    score = regressionModel.score(reducedData[10000:], response[10000:])
-
-    print("score:", score)
-
-
-    predictions = regressionModel.predict(reducedData[10000:10010])
-
-    """Checking a few of the results. They don't look too far off. However, athough
-    I tried to eliminate obviously correlated variables, it's hard to ensure there's
-    no multicolinearity problem without examining variance inflation factors, which
-    sckit does not easily support at this time. Also, though my R squared value came
-    out to .836, it would be better to look at R squared-adusted. There are also
-    problems with how the categorical variables are coded, which I will not get into here
-    """
-
-    """ Need to resove the issues with how variables are coded. The numbers assigned
-    are being fed into the linear regression as being sequential, which is not relevant.
-    There should be additional columns, 1 for each variable."""
-
-    for i in range(len(predictions)):
-        print("predicted:", predictions[i], "Actual:", response[10000 + i] )
-
-
 
 def prepDataForClassifiers(data):
     response = data["VEHICLE CLASS"]
@@ -161,23 +124,91 @@ def prepDataForClassifiers(data):
     return(prepped_data, response)
 
 
-def crossValidate(data, response, clf):
+def evaluateOneClassifier(data, response, clf, shortname="SomeClassifier"):
+    """
+    Takes in a classifier and some data, evaluates the score and prints out
+    average scoring metrics as well as a confusion matrix
+    """
+    crossValidate(data, response, clf, shortname)
+    cvConfusionMatrix(data, response, clf, shortname)
 
+def jg_cross_validate_metrics(data, response, clf, shortname="SomeClassifier"):
+    """
+    print out average scoring metrics for a 5 fold cross validation of the
+    data for one classifier.
+    """
+
+    score = cross_validate(clf, data, response, cv=5)
+    del score["train_score"]
+    for item in score.keys():
+        print(shortname,"\t", item, ":", score[item].mean())
+    cvConfusionMatrix(data, response, clf, shortname)
+
+def cvConfusionMatrix(data, response, clf, shortname="SomeClassifier"):
+    """
+    Make a prediction for every split using 5 cross validated folds. Then plot
+    a confusion matrix on the results
+    """
     result = cross_val_predict(clf, data, response, cv=5)
     labels = response.unique()
     cm = confusion_matrix(response, result, labels=labels)
 
-    print(response.value_counts())
-    for line in cm:
-        print(list(line))
+    plot_confusion_matrix(cm, labels, normalize=False, filename=shortname)
 
-    plot_confusion_matrix(cm, labels, normalize=True, filename="KNN")
 
 def pivot(data, c1, c2):
 
     table = pd.pivot_table(data, columns=[c1], fill_value=0, index=[c2], aggfunc="count")
     print(table)
 
+def getClassifiers():
+    classifiers = {}
+    classifiers["knn"] = sklearn.neighbors.KNeighborsClassifier(n_neighbors=2, algorithm="auto")
+    #classifiers["SVC_linear"] = SVC(kernel="linear", C=0.025)
+    #classifiers["SVC_gamma"] = SVC(gamma=2, C=1)
+    #classifiers["gaussian"] = GaussianProcessClassifier(1.0 * RBF(1.0))
+    classifiers["decision_tree"] = DecisionTreeClassifier(max_depth=20)
+    classifiers["random_forest"] = RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
+    classifiers["MLP_neural_network"] = MLPClassifier(alpha=1)
+    classifiers["ada_boost"] = AdaBoostClassifier()
+    classifiers["gaussian_nb"] = GaussianNB()
+    #classifiers["quad_discrim_analysis"] = QuadraticDiscriminantAnalysis()
+
+    return (classifiers)
+
+def svcLinearResults(data, response):
+
+    print("Trying Linear SVC")
+    labels = response.unique()
+
+    xtrain, xtest, ytrain, ytest = train_test_split(data, response, train_size = 2000 )
+    clf = SVC(kernel="linear", C=0.025)
+
+    clf.fit(xtrain, ytrain)
+
+    print("linear svc score", clf.score(xtest, ytest))
+
+    result = clf.predict(xtest)
+    cm = confusion_matrix(ytest, result, labels=labels)
+
+    plot_confusion_matrix(cm, labels, normalize=False, filename="linear_SVC")
+
+def svcGammaResults(data, response):
+
+    print("Trying Gamma SVC")
+    labels = response.unique()
+
+    xtrain, xtest, ytrain, ytest = train_test_split(data, response, train_size = 2000 )
+    clf = SVC(gamma=2, C=1)
+
+    clf.fit(xtrain, ytrain)
+
+    print("gamma svc score", clf.score(xtest, ytest))
+
+    result = clf.predict(xtest)
+    cm = confusion_matrix(ytest, result, labels=labels)
+
+    plot_confusion_matrix(cm, labels, normalize=False, filename="gamma_SVC")
 
 #Put data into a Pandas Dataframe
 

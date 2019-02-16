@@ -1,0 +1,44 @@
+#classifier_console_output.txt
+===========================
+Trying Linear SVC
+C:\Users\JTGeo\AppData\Local\Programs\Python\Python37-32\lib\site-packages\sklearn\model_selection\_split.py:2179: FutureWarning: From version 0.21, test_size will always complement train_size unless both are specified.
+  FutureWarning)
+linear svc score 0.36563234221826135
+Trying Gamma SVC
+C:\Users\JTGeo\AppData\Local\Programs\Python\Python37-32\lib\site-packages\sklearn\model_selection\_split.py:2179: FutureWarning: From version 0.21, test_size will always complement train_size unless both are specified.
+  FutureWarning)
+gamma svc score 0.23260147451997085
+trying: knn
+knn      fit_time : 0.043056678771972653
+knn      score_time : 0.15261454582214357
+knn      test_score : 0.3316358328793247
+knn succeeded
+trying: gaussian
+C:\Users\JTGeo\AppData\Local\Programs\Python\Python37-32\lib\site-packages\sklearn\model_selection\_validation.py:542: FutureWarning: From version 0.22, errors during fit will result in a cross validation score of NaN by default. Use error_score='raise' if you want an exception raised or error_score=np.nan to adopt the behavior from version 0.22.
+  FutureWarning)
+gaussian failed
+trying: decision_tree
+decision_tree    fit_time : 0.09755797386169433
+decision_tree    score_time : 0.007139778137207032
+decision_tree    test_score : 0.3753410303683414
+decision_tree succeeded
+trying: random_forest
+random_forest    fit_time : 0.05784749984741211
+random_forest    score_time : 0.010557079315185547
+random_forest    test_score : 0.2848193737363238
+random_forest succeeded
+trying: MLP_neural_network
+MLP_neural_network       fit_time : 5.382758235931396
+MLP_neural_network       score_time : 0.013345670700073243
+MLP_neural_network       test_score : 0.20506220422218457
+MLP_neural_network succeeded
+trying: ada_boost
+ada_boost        fit_time : 1.8072434425354005
+ada_boost        score_time : 0.09281387329101562
+ada_boost        test_score : 0.20075810441654157
+ada_boost succeeded
+trying: gaussian_nb
+gaussian_nb      fit_time : 0.037290191650390624
+gaussian_nb      score_time : 0.04241132736206055
+gaussian_nb      test_score : 0.10697124641438716
+gaussian_nb succeeded

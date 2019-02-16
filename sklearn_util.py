@@ -4,6 +4,12 @@ This function borrowed from Scikit-Learn documentation:
 https://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html
 """
 
+"""
+Another great method of comparing classifiers - Not implemented in this project
+but may be in the future. The challenge with this dataset is that there are more
+than 2 labels and many more than 2 dimensions"
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import itertools
@@ -17,13 +23,20 @@ def plot_confusion_matrix(cm, classes, filename="",
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
-    if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-        print("Normalized confusion matrix")
-    else:
-        print('Confusion matrix, without normalization')
 
-    print(cm)
+    # """Note: [JG] Modified code to create both normalized and non-normalized plots"""
+    # if (normalize == False):
+    #     plot_confusion_matrix(cm, classes, normalize=True, filename=filename+"_normalized")
+
+
+    """Commenting out print statements"""
+    # # if normalize:
+    #     cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    #     print("Normalized confusion matrix")
+    # else:
+    #     print('Confusion matrix, without normalization')
+    #
+    # print(cm)
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
@@ -41,4 +54,5 @@ def plot_confusion_matrix(cm, classes, filename="",
 
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-    plt.savefig("CM_" + filename)
+    plt.savefig("./classifier_plots/CM_" + filename)
+    plt.close()
