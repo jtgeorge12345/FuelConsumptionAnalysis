@@ -8,6 +8,12 @@ import matplotlib
 import numpy as np
 import sklearn
 import sklearn.linear_model
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import cross_val_score, cross_val_predict
+from sklearn.metrics import confusion_matrix
+from sklearn_util import *
+
 
 pd.set_option("display.max_columns", 13)
 
@@ -24,7 +30,6 @@ def importData():
 
     return(data)
 
-data = importData()
 
 def printDescriptiveStats(data):
     header = data.columns
@@ -36,8 +41,7 @@ def printDescriptiveStats(data):
         print("Categorial Attribute:", item)
         print(data[item].describe())
 
-printDescriptiveStats(data)
-print("===========================")
+
 
 """ Observations: There are about 14,000 cars in this dataset
 Average combined MPG is 27.3, high is 78, low is 7.5.Mean year is 2007.6,
@@ -51,6 +55,7 @@ distribution for more detail, so that's what we'll do."""
 #How many makes do we have?
 
 """ Before histograms, I'm curious as to what car has 16 cylinders"""
+
 
 # interestingPoints = data.loc[data['CYLINDERS'] == 16]
 # interestingPoints.assign(Comment="16 Cylinders!")
@@ -67,10 +72,11 @@ def makeHistograms(data):
 
 # makeHistograms(data)
 """ "Year" histogram is distorted by the bin sizes, as is "CYLINDERS" """
-# histogram = data.hist(column="YEAR", bins=15)
-# plt.savefig('YearsHistogram')
-# histogram = data.hist(column="CYLINDERS", bins=16)
-# plt.savefig('CylindersHistogram')
+def YearsHistogram(data):
+    histogram = data.hist(column="YEAR", bins=15)
+    plt.savefig('YearsHistogram')
+    histogram = data.hist(column="CYLINDERS", bins=16)
+    plt.savefig('CylindersHistogram')
 
 """A low-effort way of seeing correlations and seeing kde's equivalent to the
 above histograms would be to make a scatter matrix: """
@@ -81,7 +87,6 @@ def makeScatterMatrix(data, name=""):
         ax.set_ylabel(ax.get_ylabel(), fontsize = 5, rotation = 0)
     plt.savefig("scatter_matrix"+name)
     print("Scatter Matrix Saved" + name)
-#makeScatterMatrix(data)
 
 """ From this we can see that there are some pretty obvious correlations
 between fuel consumption, cylindars, engine size, and CO2 emissions. Years
@@ -90,10 +95,9 @@ be interesting to see if a closer look will reveal correlations. My expectation
 is that in general, CO2 emissions should fall over time when we look more
 specifically at certain models"""
 
-#print(data.loc[data["CYLINDERS"] == 5].groupby("MAKE").count()["MODEL"])
-#print data.loc[data['CYLINDERS'] == 5]
+def cylindarHistogram(data):
+    print(data['CYLINDERS'].value_counts())
 
-# print (data.groupby(["CYLINDERS", "MAKE"]).count())
 """ There are 16 models with 2 cylinders, 28 with 3, 481 with 5, a few with 10,
 12, and 6, but most have either 4, 6, or 8. Turns out there was nothing wrong
 with the histogram, I just  didn't know you could have cars with odd numbers of
@@ -101,7 +105,6 @@ cylinders. Does having an odd number of cylinders have a disproportionate effect
  on fuel consumption? May be a question for later. Here's a look at cylindar
  count by make:"""
 
-# print(data['CYLINDERS'].value_counts())
 
 """ Linear Regression"""
 def linReg(data):
@@ -149,46 +152,31 @@ def linReg(data):
     for i in range(len(predictions)):
         print("predicted:", predictions[i], "Actual:", response[10000 + i] )
 
-print(data.head())
-
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.model_selection import cross_val_score, cross_val_predict
-from sklearn.metrics import confusion_matrix
-
-cats = data.select_dtypes("category")
-
-enc = OneHotEncoder(handle_unknown="ignore", categories="auto")
-enc.fit(cats)
-
-transformed = enc.transform(cats)
-
-print(transformed[5].toarray())
-print(enc.inverse_transform(transformed[5]))
-
-print(data.head())
-prepped_data = pd.get_dummies(data.drop(columns=["MAKE","MODEL", "VEHICLE CLASS"]))
-response = data["VEHICLE CLASS"]
-
-print (response.head())
-
-def knnScorer(est, x, y):
-    if (est.fit(x) == y):
-        return 1
-    return 0
-
-knn = sklearn.neighbors.KNeighborsClassifier(n_neighbors=2, algorithm="auto")
-
-result = cross_val_predict(knn, prepped_data, response, cv=5)
-cm = confusion_matrix(response, result)
-
-print(response.value_counts())
-for line in cm:
-    print(list(line))
 
 
+def prepDataForClassifiers(data):
+    response = data["VEHICLE CLASS"]
+    data = data.drop(columns=["MAKE","MODEL", "VEHICLE CLASS"])
+    prepped_data = pd.get_dummies(data)
+    return(prepped_data, response)
 
 
+def crossValidate(data, response, clf):
+
+    result = cross_val_predict(clf, data, response, cv=5)
+    labels = response.unique()
+    cm = confusion_matrix(response, result, labels=labels)
+
+    print(response.value_counts())
+    for line in cm:
+        print(list(line))
+
+    plot_confusion_matrix(cm, labels, normalize=True, filename="KNN")
+
+def pivot(data, c1, c2):
+
+    table = pd.pivot_table(data, columns=[c1], fill_value=0, index=[c2], aggfunc="count")
+    print(table)
 
 
 #Put data into a Pandas Dataframe
