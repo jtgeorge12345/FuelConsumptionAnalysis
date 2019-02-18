@@ -1,31 +1,37 @@
 #main.py
 
 from FuelConsumptionAnalysis import *
-data = importData()
-printDescriptiveStats(data)
-print("===========================")
+from cluster_analysis import *
+
+#data = importData()
+# printDescriptiveStats(data)
+#print("===========================")
 #makeScatterMatrix(data)
 #cylindarHistogram(data)
 #pivot(data, "CYLINDERS", "TRANSMISSION")
 
-data, response = prepDataForClassifiers(data)
-knn = sklearn.neighbors.KNeighborsClassifier(n_neighbors=2, algorithm="auto")
-# crossValidate(data, response, knn)
 
-#jg_cross_validate_metrics(data, response, knn, shortname="knn")
+#################################### Classification ##########################
+# data, response = prepDataForClassifiers(data)
+#
+# svcLinearResults(data, response)
+# svcGammaResults(data, response)
+#
+# clfs = getClassifiers()
+# for key in clfs.keys():
+#
+#     print("trying:", key)
+#
+#     try:
+#         jg_cross_validate_metrics(data, response, clfs[key], shortname=key)
+#         print(key, "succeeded")
+#     except:
+#         print(key,"failed")
 
-clfs = getClassifiers()
-
-svcLinearResults(data, response)
-svcGammaResults(data, response)
+#################################### Clustering ##########################
 
 
-for key in clfs.keys():
+data = importData()
+cluster_prepped_data = prepDataForClustering(data)
 
-    print("trying:", key)
-
-    try:
-        jg_cross_validate_metrics(data, response, clfs[key], shortname=key)
-        print(key, "succeeded")
-    except:
-        print(key,"failed")
+jg_cluster(cluster_prepped_data)
